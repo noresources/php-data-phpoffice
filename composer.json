@@ -1,0 +1,46 @@
+{
+	"name": "noresources/ns-php-data", 
+	"description": "Data (de)serialization library", 
+	"type": "library", 
+	"license": "MIT", 
+	"keywords": [
+		"serialization"
+	], 
+	"authors": [
+			{
+			"name": "Renaud Guillard", 
+			"email": "dev@nore.fr", 
+			"role": "lead"
+			}
+	], 
+	"autoload": {
+		"psr-4": {
+			"NoreSources\\Data\\": "src/"
+		}
+	}, 
+	"minimum-stability": "dev", 
+	"require": {
+		"php": ">=5.6", 
+		"noresources/ns-php-mediatype": "^1.3"
+	}, 
+	"suggest": {
+		"ext-json": "*", 
+		"ext-yaml": "*"
+	}, 
+	"scripts": {
+		"tests": "@php  ./vendor/bin/phpunit --color=never --bootstrap vendor/autoload.php tests"
+	}, 
+	"require-dev": {
+		"phpunit/phpunit": "< 7.0"
+	}, 
+	"extra": {
+		"branch-alias": {
+			"dev-master": "1.0.x-dev"
+		}
+	}, 
+	"config": {
+		"platform": {
+			"php": "5.6.40"
+		}
+	}
+}
