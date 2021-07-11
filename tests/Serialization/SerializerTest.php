@@ -17,6 +17,11 @@ use NoreSources\Data\Serialization\IniSerializer;
 use NoreSources\Data\Serialization\UrlEncodedSerializer;
 use NoreSources\Data\Serialization\CsvSerializer;
 use NoreSources\Type\TypeDescription;
+use NoreSources\Data\Serialization\PhpFileUnserializer;
+use NoreSources\Data\Serialization\YamlSerializer;
+use NoreSources\Data\Serialization\Traits\DataFileUnserializerTrait;
+use NoreSources\Data\Serialization\DataFileUnerializerInterface;
+use NoreSources\Data\Serialization\JsonSerializer;
 
 final class SerializerTest extends \PHPUnit\Framework\TestCase
 {
@@ -225,6 +230,55 @@ final class SerializerTest extends \PHPUnit\Framework\TestCase
 
 			$this->assertEquals($value, $unserialized,
 				'Serialization/Deserialization cycle');
+		}
+	}
+
+	public function testFile()
+	{
+		$extensions = [
+			'php' => PhpFileUnserializer::class,
+			'ini' => IniSerializer::class,
+			'csv' => CsvSerializer::class
+		];
+		if (\extension_loaded('json'))
+			$extensions['json'] = JsonSerializer::class;
+		if (\extension_loaded('yaml'))
+			$extensions['yaml'] = YamlSerializer::class;
+
+		$filenameBase = __DIR__ . '/../data/table.';
+
+		foreach ($extensions as $x => $classname)
+		{
+			$filename = $filenameBase . $x;
+			$cls = new \ReflectionClass($classname);
+			/** @var DataFileUnerializerInterface  $serializer */
+			$serializer = $cls->newInstance();
+
+			$this->assertFileExists($filename);
+
+			$this->assertTrue(
+				$serializer->canUnserializeFromFile($filename),
+				$x . ' support');
+
+			$actual = $serializer->unserializeFromFile($filename);
+
+			$actual = Container::map($actual,
+				function ($k, $v) {
+					if (\is_array($v))
+						return \implode(', ', $v);
+					return $v;
+				});
+
+			if (isset($expected))
+			{
+				$this->assertEquals($expected, $actual,
+					'Compare ' . $x . ' vs ' . $expectedExtension);
+			}
+			else
+			{
+				$expected = $actual;
+				$expectedExtension = $x;
+			}
 		}
 	}
 
