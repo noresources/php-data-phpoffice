@@ -16,5 +16,15 @@ trait DataFileExtensionTrait
 		$this->extensions = $array;
 	}
 
+	protected function matchExtension($filename)
+	{
+		if (!\is_array($this->extensions))
+			return false;
+		if (!\is_string($filename))
+			return false;
+		return \in_array(\pathinfo($filename, PATHINFO_EXTENSION),
+			$this->extensions);
+	}
+
 	private $extensions;
 }

@@ -11,6 +11,7 @@ namespace NoreSources\Data\Serialization\Traits;
 use NoreSources\MediaType\MediaTypeFileExtensionRegistry;
 use NoreSources\MediaType\MediaTypeInterface;
 use NoreSources\MediaType\MediaTypeFactory;
+use NoreSources\Data\Serialization\DataUnserializerInterface;
 
 /**
  * DataFileUnserializer base on DataUnserializer implementation
@@ -28,12 +29,19 @@ trait DataFileUnserializerTrait
 	public function canUnserializeFromFile($filename,
 		MediaTypeInterface $mediaType = null)
 	{
-		$mediaType = $this->normalizeFileMediaType($filename, $mediaType);
-		if ($mediaType)
+		if (\method_exists($this, 'normalizeFileMediaType'))
+			$mediaType = \call_user_func(
+				[
+					$this,
+					'normalizeFileMediaType'
+				], $filename, $mediaType);
+		if ($mediaType && $this instanceof DataUnserializerInterface)
 			return $this->canUnserializeData($mediaType);
-		if (isset($this->extensions) && \is_array($this->extensions))
-			return \in_array(\pathinfo($filename, PATHINFO_EXTENSION),
-				$this->extensions);
+		if (\method_exists($this, 'matchExtension'))
+			return \call_user_func([
+				$this,
+				'matchExtension'
+			], $filename);
 		return false;
 	}
 

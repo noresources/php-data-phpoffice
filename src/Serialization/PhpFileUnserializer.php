@@ -78,7 +78,7 @@ class PhpFileUnserializerSandbox
 			throw new DataSerializationException(
 				$filename . ' not found');
 		$previous = set_error_handler(
-			function ($code, $message, $file, $line) use (&$error) {
+			function ($errno, $message, $file, $line) use (&$error) {
 				if (!(error_reporting() & $errno))
 					return false;
 				$error = $message;

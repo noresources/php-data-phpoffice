@@ -13,6 +13,7 @@ use NoreSources\Data\Serialization\Traits\DataFileExtensionTrait;
 use NoreSources\Data\Serialization\Traits\DataFileUnserializerTrait;
 use NoreSources\Data\Serialization\Traits\MediaTypeListTrait;
 use NoreSources\MediaType\MediaType;
+use NoreSources\MediaType\MediaTypeFactory;
 
 /**
  * INI deserialization.
@@ -34,6 +35,18 @@ class IniSerializer implements DataUnserializerInterface,
 	public function getUnserializableDataMediaTypes()
 	{
 		return $this->getMediaTypes();
+	}
+
+	/**
+	 * Note: Guessing ini media type from file content type is unreliable
+	 */
+	public function canUnserializeFromFile($filename,
+		MediaTypeInterface $mediaType = null)
+	{
+		$mediaType = $this->normalizeFileMediaType(null, $mediaType);
+		if ($mediaType)
+			return $this->canUnserializeData($mediaType);
+		return $this->matchExtension($filename);
 	}
 
 	public function unserializeFromFile($filename,
@@ -89,5 +102,11 @@ class IniSerializer implements DataUnserializerInterface,
 		return [
 			MediaType::fromString('text/x-ini')
 		];
+	}
+
+	protected function getMediaTypeFactoryFlags()
+	{
+		return MediaTypeFactory::FROM_ALL |
+			MediaTypeFactory::FROM_EXTENSION_FIRST;
 	}
 }

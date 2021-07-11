@@ -252,7 +252,12 @@ class CsvSerializer implements DataUnserializerInterface,
 	protected function buildMediaTypeList()
 	{
 		return [
-			MediaTypeFactory::fromString('text/csv')
+			MediaTypeFactory::fromString('text/csv'),
+			/*
+			 *  application/csv is not a registered media type but
+			 *  finfo_type / mime_content_type may return this one
+			 */
+			MediaTypeFactory::fromString('application/csv')
 		];
 	}
 }
