@@ -41,12 +41,12 @@ class DataSerializationManager implements DataUnserializerInterface,
 
 		if ($registerBuiltins)
 		{
-			if (JsonSerializer::prerequisites())
-				$this->registerSerializer(new JsonSerializer());
+			$this->registerSerializer(new IniSerializer());
+			$this->registerSerializer(new CsvSerializer());
 			if (YamlSerializer::prerequisites())
 				$this->registerSerializer(new YamlSerializer());
-			$this->registerSerializer(new CsvSerializer());
-			$this->registerSerializer(new IniSerializer());
+			if (JsonSerializer::prerequisites())
+				$this->registerSerializer(new JsonSerializer());
 		}
 	}
 
