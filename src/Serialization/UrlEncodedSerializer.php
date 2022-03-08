@@ -71,18 +71,6 @@ class UrlEncodedSerializer implements DataUnserializerInterface,
 		return false;
 	}
 
-	protected function matchMediaType(MediaTypeInterface $mediaType)
-	{
-		$types = $this->getMediaTypes();
-		$s = \strval($mediaType);
-		foreach ($types as $type)
-		{
-			if (\strcasecmp(\strval($type), $s) == 0)
-				return true;
-		}
-		return true;
-	}
-
 	protected function buildMediaTypeList()
 	{
 		return [

@@ -237,18 +237,6 @@ class CsvSerializer implements DataUnserializerInterface,
 		return TypeConversion::toString($data);
 	}
 
-	protected function matchMediaType(MediaTypeInterface $mediaType)
-	{
-		$types = $this->getMediaTypes();
-		$s = \strval($mediaType);
-		foreach ($types as $type)
-		{
-			if (\strcasecmp($s, \strval($type)) == 0)
-				return true;
-		}
-		return false;
-	}
-
 	protected function buildMediaTypeList()
 	{
 		return [
