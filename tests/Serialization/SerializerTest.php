@@ -22,9 +22,45 @@ use NoreSources\Data\Serialization\YamlSerializer;
 use NoreSources\Data\Serialization\Traits\DataFileUnserializerTrait;
 use NoreSources\Data\Serialization\DataFileUnerializerInterface;
 use NoreSources\Data\Serialization\JsonSerializer;
+use NoreSources\Data\Serialization\LuaSerializer;
 
 final class SerializerTest extends \PHPUnit\Framework\TestCase
 {
+
+	public function testLua()
+	{
+		$directory = __DIR__ . '/../data';
+		$tests = [
+			'nil' => null,
+			'true' => true,
+			'false' => false,
+			'pi' => 3.14,
+			'answer' => 42,
+			'table' => [
+				"key" => "value",
+				"implicitely indexed",
+				"subtree" => [
+					5,
+					6,
+					7
+				],
+				'Not an identifier' => 'Somthing "in" the air',
+				"05" => "It's not '5'"
+			]
+		];
+
+		$serializer = new LuaSerializer();
+
+		foreach ($tests as $key => $data)
+		{
+			$filename = $directory . '/' . $key . '.data.lua';
+			$serialized = $serializer->serializeData($data);
+			if (!\is_file($filename))
+				\file_put_contents($filename, $serialized);
+			$reference = file_get_contents($filename);
+			$this->assertEquals($reference, $serialized, $key);
+		}
+	}
 
 	public function testIni()
 	{
