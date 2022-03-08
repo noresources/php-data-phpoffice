@@ -44,6 +44,7 @@ class DataSerializationManager implements DataUnserializerInterface,
 		{
 			$this->registerSerializer(new IniSerializer());
 			$this->registerSerializer(new CsvSerializer());
+			$this->registerSerializer(new LuaSerializer());
 			if (YamlSerializer::prerequisites())
 				$this->registerSerializer(new YamlSerializer());
 			if (JsonSerializer::prerequisites())
