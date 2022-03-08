@@ -15,6 +15,7 @@ use NoreSources\MediaType\MediaType;
 use NoreSources\Data\Serialization\Traits\DataFileMediaTypeNormalizerTrait;
 use NoreSources\Type\TypeDescription;
 use NoreSources\Data\Serialization\Traits\DataFileExtensionTrait;
+use NoreSources\Data\Serialization\Traits\DataFileUnserializerTrait;
 
 /**
  * Data(De)serializer aggregate
@@ -158,7 +159,7 @@ class DataSerializationManager implements DataUnserializerInterface,
 
 	public function getUnserializableFileMediaTypes()
 	{
-		$stack = $this->stacks[DataFileSerializerInterface::class];
+		$stack = $this->stacks[DataFileUnserializerTrait::class];
 		$list = [];
 		foreach ($stack as $serializer)
 		{
