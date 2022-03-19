@@ -37,7 +37,7 @@ class LuaSerializer implements DataSerializerInterface,
 		if ($mediaType)
 			return $this->matchMediaType($mediaType);
 
-		return false;
+		return !\is_object($data) || Container::isTraversable($data);
 	}
 
 	public function serializeData($data,
@@ -129,7 +129,7 @@ class LuaSerializer implements DataSerializerInterface,
 	protected function buildMediaTypeList()
 	{
 		return [
-			MediaTypeFactory::fromString('text/x-lua')
+			MediaTypeFactory::createFromString('text/x-lua')
 		];
 	}
 
