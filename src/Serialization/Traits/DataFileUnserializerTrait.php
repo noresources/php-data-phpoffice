@@ -35,8 +35,16 @@ trait DataFileUnserializerTrait
 					$this,
 					'normalizeFileMediaType'
 				], $filename, $mediaType);
-		if ($mediaType && $this instanceof DataUnserializerInterface)
-			return $this->canUnserializeData($mediaType);
+		if ($mediaType instanceof MediaTypeInterface &&
+			$this instanceof DataUnserializerInterface)
+		{
+			$mediaTypes = $this->getUnserializableFileMediaTypes();
+			foreach ($mediaTypes as $m)
+			{
+				if ($mediaType->compare($m) == 0)
+					return true;
+			}
+		}
 		if (\method_exists($this, 'matchExtension'))
 			return \call_user_func([
 				$this,

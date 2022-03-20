@@ -13,6 +13,7 @@ use NoreSources\Type\TypeConversion;
 use NoreSources\MediaType\MediaTypeInterface;
 use NoreSources\Data\Serialization\Traits\MediaTypeListTrait;
 use NoreSources\MediaType\MediaTypeFactory;
+use NoreSources\MediaType\MediaType;
 
 /**
  * URL-encoded query parameter (de)serialization
@@ -34,7 +35,7 @@ class UrlEncodedSerializer implements DataUnserializerInterface,
 	{
 		if ($mediaType)
 			return $this->matchMediaType($mediaType);
-		return false;
+		return !\is_object($data) || Container::isTraversable($data);
 	}
 
 	public function getUnserializableDataMediaTypes()
@@ -64,17 +65,20 @@ class UrlEncodedSerializer implements DataUnserializerInterface,
 		return \urlencode(TypeConversion::toString($data));
 	}
 
-	public function canUnserializeData(MediaTypeInterface $mediaType)
+	public function canUnserializeData($data,
+		MediaTypeInterface $mediaType = null)
 	{
+		if (!\is_string($data))
+			return false;
 		if ($mediaType)
 			return $this->matchMediaType($mediaType);
-		return false;
+		return true;
 	}
 
 	protected function buildMediaTypeList()
 	{
 		return [
-			MediaTypeFactory::createFromString(
+			MediaType::createFromString(
 				'application/x-www-form-urlencoded')
 		];
 	}

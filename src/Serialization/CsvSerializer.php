@@ -66,9 +66,14 @@ class CsvSerializer implements DataUnserializerInterface,
 		return $csv;
 	}
 
-	public function canUnserializeData(MediaTypeInterface $mediaType)
+	public function canUnserializeData($data,
+		MediaTypeInterface $mediaType = null)
 	{
-		return $this->matchMediaType($mediaType);
+		if (!\is_string($data))
+			return false;
+		if ($mediaType)
+			return $this->matchMediaType($mediaType);
+		return true;
 	}
 
 	public function getSerializableDataMediaTypes()

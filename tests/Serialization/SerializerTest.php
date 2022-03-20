@@ -9,8 +9,6 @@ namespace NoreSources\Data\Test;
 
 use NoreSources\Container\Container;
 use NoreSources\Text\StructuredText;
-use NoreSources\MediaType\MediaTypeInterface;
-use NoreSources\MediaType\MediaTypeFactory;
 use NoreSources\Data\Serialization\SerializationManager;
 use NoreSources\Data\Serialization\DataSerializationManager;
 use NoreSources\Data\Serialization\IniSerializer;
@@ -23,6 +21,8 @@ use NoreSources\Data\Serialization\Traits\DataFileUnserializerTrait;
 use NoreSources\Data\Serialization\DataFileUnerializerInterface;
 use NoreSources\Data\Serialization\JsonSerializer;
 use NoreSources\Data\Serialization\LuaSerializer;
+use NoreSources\MediaType\MediaType;
+use NoreSources\MediaType\MediaTypeFactory;
 
 final class SerializerTest extends \PHPUnit\Framework\TestCase
 {
@@ -50,14 +50,21 @@ final class SerializerTest extends \PHPUnit\Framework\TestCase
 		];
 
 		$serializer = new LuaSerializer();
+		$mediaType = MediaType::createFromString('text/x-lua');
 
 		foreach ($tests as $key => $data)
 		{
 			$filename = $directory . '/' . $key . '.data.lua';
-			$serialized = $serializer->serializeData($data);
+
+			$this->assertTrue($serializer->canSerializeData($data),
+				'Can serialize ' . TypeDescription::getName($data) . ' ' .
+				$key);
+
+			$serialized = $serializer->serializeData($data, $mediaType);
 			if (!\is_file($filename))
 				\file_put_contents($filename, $serialized);
 			$reference = file_get_contents($filename);
+
 			$this->assertEquals($reference, $serialized, $key);
 		}
 	}
@@ -251,9 +258,11 @@ final class SerializerTest extends \PHPUnit\Framework\TestCase
 	public function testUrlEncoded()
 	{
 		$serializer = new UrlEncodedSerializer();
+		$mediaType = MediaType::createFromString(
+			'application/x-www-form-urlencoded');
 
 		foreach ([
-			'Test' => 'text',
+			'Text' => 'text',
 			'A text with space' => 'A text with space',
 			'Key-values' => [
 				'key' => 'value',
@@ -261,7 +270,26 @@ final class SerializerTest extends \PHPUnit\Framework\TestCase
 			]
 		] as $label => $value)
 		{
+			$this->assertTrue(
+				$serializer->canSerializeData($value, $mediaType),
+				'Can serialize ' . $label . ' with media type');
+			$this->assertTrue($serializer->canSerializeData($value),
+				'Can serialize ' . $label . ' without media type');
+
 			$serialized = $serializer->serializeData($value);
+
+			$this->assertTrue(
+				$serializer->canUnserializeData($serialized, $mediaType),
+				'Can unserialize ' . $label . ' ' .
+				TypeDescription::getName($serialized) .
+				' with media type');
+
+			$this->assertTrue(
+				$serializer->canUnserializeData($serialized),
+				'Can unserialize ' . $label . ' ' .
+				TypeDescription::getName($serialized) .
+				' without media type');
+
 			$unserialized = $serializer->unserializeData($serialized);
 
 			$this->assertEquals($value, $unserialized,
@@ -364,17 +392,15 @@ final class SerializerTest extends \PHPUnit\Framework\TestCase
 
 				$data = $manager->unserializeFromFile($filename);
 
-				// if ($manager->canSerializeData($data))
-				if (true)
+				if ($manager->canSerializeData($data))
 				{
 					$serialized = $manager->serializeData($data);
 					$this->assertEquals('string',
 						TypeDescription::getName($serialized),
 						'Re-serialize');
-
-					if (true)
+					if ($manager->canUnserializeData($serialized))
 					{
-						$data = $manager->unserializeData($data);
+						$data = $manager->unserializeData($serialized);
 					}
 				}
 

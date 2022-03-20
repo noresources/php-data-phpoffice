@@ -23,10 +23,14 @@ interface DataUnserializerInterface
 
 	/**
 	 *
+	 * @param mixed $data
+	 *        	Data
 	 * @param MediaTypeInterface $mediaType
+	 *        	Data media type
 	 * @return TRUE if instance support de-serialization of $mediaType content
 	 */
-	function canUnserializeData(MediaTypeInterface $mediaType);
+	function canUnserializeData($data,
+		MediaTypeInterface $mediaType = null);
 
 	/**
 	 *

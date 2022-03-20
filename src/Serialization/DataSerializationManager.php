@@ -85,12 +85,13 @@ class DataSerializationManager implements DataUnserializerInterface,
 		return $list;
 	}
 
-	public function canUnserializeData(MediaTypeInterface $mediaType)
+	public function canUnserializeData($data,
+		MediaTypeInterface $mediaType = null)
 	{
 		$stack = $this->stacks[DataUnserializerInterface::class];
 		foreach ($stack as $serializer)
 		{
-			if ($serializer->canUnserializeData($mediaType))
+			if ($serializer->canUnserializeData($data, $mediaType))
 				return true;
 		}
 
@@ -103,15 +104,9 @@ class DataSerializationManager implements DataUnserializerInterface,
 		$stack = $this->stacks[DataUnserializerInterface::class];
 		foreach ($stack as $serializer)
 		{
-			if ($mediaType)
-				if (!$serializer->canUnserializeData($mediaType))
-					continue;
-			try
-			{
-				return $serializer->unserializeData($data, $mediaType);
-			}
-			catch (\Exception $e)
-			{}
+			if (!$serializer->canUnserializeData($data, $mediaType))
+				continue;
+			return $serializer->unserializeData($data, $mediaType);
 		}
 		throw new DataSerializationException();
 	}
