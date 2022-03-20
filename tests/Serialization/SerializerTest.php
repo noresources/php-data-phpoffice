@@ -295,8 +295,8 @@ final class SerializerTest extends \PHPUnit\Framework\TestCase
 			$this->assertTrue(
 				$serializer->canUnserializeFromFile($filename),
 				\basename($filename) . ' ' .
-				\strval(MediaTypeFactory::createFromMedia($filename)) . ' ' .
-				$x . ' support using ' .
+				\strval(MediaTypeFactory::createFromMedia($filename)) .
+				' ' . $x . ' support using ' .
 				TypeDescription::getLocalName($classname, true));
 
 			$actual = $serializer->unserializeFromFile($filename);
@@ -363,6 +363,20 @@ final class SerializerTest extends \PHPUnit\Framework\TestCase
 					$label . ' can unserialize .' . $extension);
 
 				$data = $manager->unserializeFromFile($filename);
+
+				// if ($manager->canSerializeData($data))
+				if (true)
+				{
+					$serialized = $manager->serializeData($data);
+					$this->assertEquals('string',
+						TypeDescription::getName($serialized),
+						'Re-serialize');
+
+					if (true)
+					{
+						$data = $manager->unserializeData($data);
+					}
+				}
 
 				if ($manager->canSerializeToFile($derivedFilename, $data))
 				{
