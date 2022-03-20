@@ -91,7 +91,7 @@ class JsonSerializer implements DataUnserializerInterface,
 	protected function buildMediaTypeList()
 	{
 		return [
-			MediaType::fromString('application/json')
+			MediaType::createFromString('application/json')
 		];
 	}
 }

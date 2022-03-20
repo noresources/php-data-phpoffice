@@ -74,7 +74,7 @@ class UrlEncodedSerializer implements DataUnserializerInterface,
 	protected function buildMediaTypeList()
 	{
 		return [
-			MediaTypeFactory::fromString(
+			MediaTypeFactory::createFromString(
 				'application/x-www-form-urlencoded')
 		];
 	}

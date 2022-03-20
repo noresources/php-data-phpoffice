@@ -28,9 +28,9 @@ trait DataFileMediaTypeNormalizerTrait
 		try
 		{
 			if (\is_string($mediaType))
-				$mediaType = MediaTypeFactory::fromString($mediaType);
+				$mediaType = MediaTypeFactory::createFromString($mediaType);
 			elseif ($filename)
-				$mediaType = MediaTypeFactory::fromMedia($filename,
+				$mediaType = MediaTypeFactory::createFromMedia($filename,
 					$this->getMediaTypeFactoryFlags());
 		}
 		catch (\Exception $e)

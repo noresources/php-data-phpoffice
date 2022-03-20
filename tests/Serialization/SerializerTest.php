@@ -295,7 +295,7 @@ final class SerializerTest extends \PHPUnit\Framework\TestCase
 			$this->assertTrue(
 				$serializer->canUnserializeFromFile($filename),
 				\basename($filename) . ' ' .
-				\strval(MediaTypeFactory::fromMedia($filename)) . ' ' .
+				\strval(MediaTypeFactory::createFromMedia($filename)) . ' ' .
 				$x . ' support using ' .
 				TypeDescription::getLocalName($classname, true));
 

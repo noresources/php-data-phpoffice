@@ -104,7 +104,7 @@ class YamlSerializer implements DataUnserializerInterface,
 	protected function buildMediaTypeList()
 	{
 		return [
-			MediaType::fromString('text/x-yaml')
+			MediaType::createFromString('text/x-yaml')
 		];
 	}
 }

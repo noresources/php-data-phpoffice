@@ -61,7 +61,7 @@ class PhpFileUnserializer implements DataFileUnerializerInterface
 	protected function buildMediaTypeList()
 	{
 		return [
-			MediaTypeFactory::fromString('text/x-php')
+			MediaTypeFactory::createFromString('text/x-php')
 		];
 	}
 }
