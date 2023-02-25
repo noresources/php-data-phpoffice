@@ -109,7 +109,7 @@ class CsvSerializer implements DataUnserializerInterface,
 					if (ctype_digit($v))
 						return \intval($v);
 					if (\is_numeric($v))
-						return \float($v);
+						return \floatval($v);
 					return $v;
 				});
 		}
@@ -188,7 +188,10 @@ class CsvSerializer implements DataUnserializerInterface,
 		foreach ($data as $line)
 		{
 			if (!\is_array($line))
-				$line = Container::isArray($line);
+				$line = Container::isTraversable($line) ? Container::createArray(
+					$line) : [
+					$line
+				];
 
 			$normalizedLine = [];
 			foreach ($line as $key => $value)
