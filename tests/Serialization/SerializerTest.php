@@ -23,9 +23,122 @@ use NoreSources\Data\Serialization\JsonSerializer;
 use NoreSources\Data\Serialization\LuaSerializer;
 use NoreSources\MediaType\MediaType;
 use NoreSources\MediaType\MediaTypeFactory;
+use NoreSources\Data\Serialization\PlainTextSerializer;
+use NoreSources\Type\TypeConversion;
 
 final class SerializerTest extends \PHPUnit\Framework\TestCase
 {
+
+	public function testSerializePlain()
+	{
+		$s = new PlainTextSerializer();
+		$tests = [
+			'basic' => [
+				'input' => 'Hello',
+				'expected' => 'Hello'
+			],
+			'int' => [
+				'input' => 42,
+				'expected' => '42'
+			],
+			'boolean false' => [
+				'input' => false,
+				'expected' => ''
+			],
+			'boolean true' => [
+				'input' => true,
+				'expected' => '1'
+			],
+			'list' => [
+				'input' => [
+					'a',
+					'b'
+				],
+				'expected' => "a\nb"
+			],
+			'map' => [
+				'input' => [
+					'First' => 'a',
+					'Second' => 'b'
+				],
+				'expected' => "a\nb"
+			],
+			'deep map' => [
+				'input' => [
+					'First' => 'a',
+					'Second' => [
+						's1' => 'b1',
+						'b2' => [
+							'c1',
+							'c2' => [
+								'foo' => 'bar'
+							],
+							'c3'
+						]
+					]
+				],
+				'expected' => "a\nb1\nc1\nbar\nc3"
+			]
+		];
+
+		foreach ($tests as $label => $test)
+		{
+			$i = $test['input'];
+			$expected = $test['expected'];
+			$actual = $s->serializeData($i);
+			$this->assertEquals($expected, $actual, $label);
+		}
+	}
+
+	public function testUnserializePlain()
+	{
+		$s = new PlainTextSerializer();
+		$tests = [
+			'text' => [
+				'input' => 'Hello',
+				'expected' => 'Hello'
+			],
+			'int' => [
+				'input' => '42',
+				'expected' => 42
+			],
+			'float' => [
+				'input' => '6.55957',
+				'expected' => 6.55957
+			],
+			'LF' => [
+				"input" => "first\nsecond\nthird",
+				'expected' => [
+					'first',
+					'second',
+					'third'
+				]
+			],
+			'Mixed CR, LF and CRLF' => [
+				"input" => "first\nInner\rValues\r\nsecond\nthird",
+				'expected' => [
+					'first',
+					'Inner',
+					'Values',
+					'second',
+					'third'
+				]
+			]
+		];
+
+		foreach ($tests as $label => $test)
+		{
+			$i = $test['input'];
+			$expected = $test['expected'];
+			$actual = $s->unserializeData($i);
+
+			$this->assertEquals(TypeDescription::getName($expected),
+				TypeDescription::getName($actual),
+				$label . ' to ' . TypeDescription::getName($expected));
+
+			$this->assertEquals($expected, $actual, $label . ' value');
+		}
+	}
 
 	public function testLua()
 	{
