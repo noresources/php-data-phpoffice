@@ -58,6 +58,34 @@ class YamlSerializer implements DataUnserializerInterface,
 		return true;
 	}
 
+	/**
+	 * Indicates if the given file can be unserialized
+	 *
+	 * Since their is no reliable method to gen the correct media type of a YAML file,
+	 * only the file extension is checked.
+	 */
+	public function canUnserializeFromFile($filename,
+		MediaTypeInterface $mediaType = null)
+	{
+		if (\is_string($mediaType))
+			$mediaType = MediaType::createFromString($mediaType);
+		if ($mediaType instanceof MediaTypeInterface)
+		{
+			$types = $this->getMediaTypes();
+			foreach ($types as $type)
+			{
+				if ($type->match($mediaType))
+					return true;
+			}
+		}
+
+		$x = \pathinfo($filename, PATHINFO_EXTENSION);
+		return \in_array($x, [
+			'yaml',
+			'yml'
+		]);
+	}
+
 	public function getUnserializableDataMediaTypes()
 	{
 		return $this->getMediaTypes();

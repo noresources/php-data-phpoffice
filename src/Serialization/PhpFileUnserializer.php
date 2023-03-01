@@ -8,6 +8,7 @@
  */
 namespace NoreSources\Data\Serialization;
 
+use NoreSources\MediaType\MediaType;
 use NoreSources\Data\Serialization\Traits\DataFileMediaTypeNormalizerTrait;
 use NoreSources\Data\Serialization\Traits\DataFileExtensionTrait;
 use NoreSources\Data\Serialization\Traits\DataFileUnserializerTrait;
@@ -61,7 +62,7 @@ class PhpFileUnserializer implements DataFileUnerializerInterface
 	protected function buildMediaTypeList()
 	{
 		return [
-			MediaTypeFactory::createFromString('text/x-php')
+			MediaType::createFromString('text/x-php')
 		];
 	}
 }

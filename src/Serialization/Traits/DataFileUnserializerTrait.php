@@ -12,6 +12,9 @@ use NoreSources\MediaType\MediaTypeFileExtensionRegistry;
 use NoreSources\MediaType\MediaTypeInterface;
 use NoreSources\MediaType\MediaTypeFactory;
 use NoreSources\Data\Serialization\DataUnserializerInterface;
+use NoreSources\Type\TypeDescription;
+use NoreSources\MediaType\MediaType;
+use NoreSources\Type\TypeConversion;
 
 /**
  * DataFileUnserializer base on DataUnserializer implementation
@@ -35,21 +38,26 @@ trait DataFileUnserializerTrait
 					$this,
 					'normalizeFileMediaType'
 				], $filename, $mediaType);
+
 		if ($mediaType instanceof MediaTypeInterface &&
 			$this instanceof DataUnserializerInterface)
 		{
 			$mediaTypes = $this->getUnserializableFileMediaTypes();
+			$mediaTypeString = TypeConversion::toString($mediaType);
+
 			foreach ($mediaTypes as $m)
 			{
-				if ($mediaType->compare($m) == 0)
+				if ($m->match($mediaType))
 					return true;
 			}
 		}
 		if (\method_exists($this, 'matchExtension'))
-			return \call_user_func([
+		{
+			$match = \call_user_func([
 				$this,
 				'matchExtension'
 			], $filename);
+		}
 		return false;
 	}
 

@@ -8,6 +8,7 @@
  */
 namespace NoreSources\Data\Serialization;
 
+use NoreSources\MediaType\MediaType;
 use NoreSources\Type\TypeConversion;
 use NoreSources\MediaType\MediaTypeCompareTrait;
 use NoreSources\MediaType\MediaTypeInterface;
@@ -248,7 +249,7 @@ class CsvSerializer implements DataUnserializerInterface,
 	protected function buildMediaTypeList()
 	{
 		return [
-			MediaTypeFactory::createFromString('text/csv'),
+			MediaType::createFromString('text/csv'),
 			/*
 			 *  application/csv is not a registered media type but
 			 *  finfo_type / mime_content_type may return this one

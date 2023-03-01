@@ -12,9 +12,8 @@ use NoreSources\MediaType\MediaTypeInterface;
 use NoreSources\Data\Serialization\Traits\DataFileExtensionTrait;
 use NoreSources\Data\Serialization\Traits\DataFileUnserializerTrait;
 use NoreSources\Data\Serialization\Traits\MediaTypeListTrait;
-use NoreSources\MediaType\MediaType;
 use NoreSources\MediaType\MediaTypeFactory;
-use NoreSources\MediaType\MediaRange;
+use NoreSources\MediaType\MediaType;
 
 /**
  * INI deserialization.

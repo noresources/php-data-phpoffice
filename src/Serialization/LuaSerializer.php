@@ -8,6 +8,7 @@
  */
 namespace NoreSources\Data\Serialization;
 
+use NoreSources\MediaType\MediaType;
 use NoreSources\Container\Container;
 use NoreSources\Type\TypeConversion;
 use NoreSources\MediaType\MediaTypeInterface;
@@ -129,7 +130,7 @@ class LuaSerializer implements DataSerializerInterface,
 	protected function buildMediaTypeList()
 	{
 		return [
-			MediaTypeFactory::createFromString('text/x-lua')
+			MediaType::createFromString('text/x-lua')
 		];
 	}
 
