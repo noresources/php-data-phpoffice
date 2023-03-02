@@ -1,0 +1,22 @@
+{
+	"integer": 42, 
+	"key": "value", 
+	"array": [
+		1, 
+		2, 
+		3
+	], 
+	"float": 3.14, 
+	"map": {
+		"ducks": {
+			"disney": [
+				"Donald", 
+				"Scrooge"
+			], 
+			"warner": [
+				"Bugs", 
+				"Daffy"
+			]
+		}
+	}
+}

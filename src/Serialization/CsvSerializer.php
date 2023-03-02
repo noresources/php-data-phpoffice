@@ -20,6 +20,7 @@ use NoreSources\Data\Serialization\Traits\MediaTypeListTrait;
 use NoreSources\Data\Serialization\Traits\DataFileExtensionTrait;
 use NoreSources\Data\Serialization\Traits\DataFileUnserializerTrait;
 use NoreSources\Data\Serialization\Traits\DataFileSerializerTrait;
+use NoreSources\Type\TypeConversionException;
 
 /**
  * CSV (comma separated value) (de)serializer
@@ -45,6 +46,25 @@ class CsvSerializer implements DataUnserializerInterface,
 		$this->setFileExtensions([
 			'csv'
 		]);
+		$this->stringifier = [
+			self::class,
+			'defaultStringifier'
+		];
+	}
+
+	/**
+	 * Set the strigification function
+	 *
+	 * @param callable $callback
+	 *        	Stringification function
+	 * @throws \InvalidArgumentException
+	 */
+	public function setStringifier($callback)
+	{
+		if (!\is_callable($callback))
+			throw new \InvalidArgumentException(
+				'Stringifier must be a callable');
+		$this->stringifier = $callback;
 	}
 
 	public function getUnserializableDataMediaTypes()
@@ -161,6 +181,17 @@ class CsvSerializer implements DataUnserializerInterface,
 		\fclose($stream);
 	}
 
+	public static function defaultStringifier($value)
+	{
+		try
+		{
+			return TypeConversion::toString($value);
+		}
+		catch (TypeConversionException $e)
+		{}
+		return serialize($value);
+	}
+
 	protected function prepareSerialization($data)
 	{
 		if (!\is_array($data))
@@ -243,7 +274,7 @@ class CsvSerializer implements DataUnserializerInterface,
 
 	protected function prepareFieldSerialization($data)
 	{
-		return TypeConversion::toString($data);
+		return \call_user_func($this->stringifier, $data);
 	}
 
 	protected function buildMediaTypeList()
@@ -257,4 +288,10 @@ class CsvSerializer implements DataUnserializerInterface,
 			MediaTypeFactory::createFromString('application/csv')
 		];
 	}
+
+	/**
+	 *
+	 * @var callable
+	 */
+	private $stringifier;
 }
