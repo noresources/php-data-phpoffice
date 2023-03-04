@@ -462,7 +462,82 @@ final class SerializerTest extends \PHPUnit\Framework\TestCase
 		}
 	}
 
-	public function testManager()
+	public function testManagerDeserializerSelection()
+	{
+		$tests = [
+			'URL encoded' => [
+				'input' => \urlencode('Hello world!'),
+				'expected' => 'Hello world!',
+				'type' => 'application/x-www-form-urlencoded',
+				'select' => UrlEncodedSerializer::class
+			],
+			'JSON' => [
+				'input' => \json_encode('Hello world!'),
+				'expected' => 'Hello world!',
+				'type' => 'application/json',
+				'select' => JsonSerializer::class
+			],
+			'URL encoded params' => [
+				'input' => \http_build_query([
+					'hello' => 'world'
+				]),
+				'expected' => [
+					'hello' => 'world'
+				],
+				'type' => 'application/x-www-form-urlencoded',
+				'select' => UrlEncodedSerializer::class
+			]
+		];
+
+		$manager = new DataSerializationManager();
+		foreach ($tests as $label => $test)
+		{
+			$input = Container::keyValue($test, 'input');
+			$expected = Container::keyValue($test, 'expected', $input);
+			$mediaType = Container::keyValue($test, 'type');
+			if ($mediaType)
+				$mediaType = MediaTypeFactory::createFromString(
+					$mediaType);
+
+			$deserializers = $manager->getDataUnserializerFor($input,
+				$mediaType);
+
+			$deserializerList = Container::implodeValues(
+				\array_map([
+					TypeDescription::class,
+					'getLocalName'
+				], $deserializers),
+				[
+					Container::IMPLODE_BETWEEN => ', ',
+					Container::IMPLODE_BETWEEN_LAST => ' or '
+				]);
+
+			$deserializers = \array_map(
+				[
+					TypeDescription::class,
+					'getName'
+				], $deserializers);
+
+			if (($select = Container::keyValue($test, 'select')))
+			{
+				$this->assertContains($select, $deserializers,
+					$label . ' using ' . $deserializerList);
+			}
+
+			$actual = null;
+			try
+			{
+				$actual = $manager->unserializeData($input, $mediaType);
+			}
+			catch (\Exception $e)
+			{
+				$actual = TypeDescription::getName($e);
+			}
+			$this->assertEquals($expected, $actual, $label);
+		}
+	}
+
+	public function testManagerDile()
 	{
 		$manager = new DataSerializationManager();
 

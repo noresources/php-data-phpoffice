@@ -44,6 +44,7 @@ class DataSerializationManager implements DataUnserializerInterface,
 		if ($registerBuiltins)
 		{
 			$this->registerSerializer(new PlainTextSerializer());
+			$this->registerSerializer(new UrlEncodedSerializer());
 			$this->registerSerializer(new IniSerializer());
 			$this->registerSerializer(new CsvSerializer());
 			$this->registerSerializer(new LuaSerializer());
