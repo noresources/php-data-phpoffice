@@ -117,12 +117,15 @@ class CsvSerializer implements DataUnserializerInterface,
 	public function unserializeFromFile($filename,
 		MediaTypeInterface $mediaType = null)
 	{
-		$stream = \fopen($filename, 'rb');
+		$stream = @\fopen($filename, 'rb');
 		if (!\is_resource($stream))
+		{
+			$error = \error_get_last();
 			throw new DataSerializationException(
-				'Failed to open input stream');
+				'Failed to open input stream: ' . $error['message']);
+		}
 		$lines = [];
-		while ($line = \fgetcsv($stream, 0, $this->separator,
+		while ($line = @\fgetcsv($stream, 0, $this->separator,
 			$this->enclosure, $this->escape))
 		{
 			$lines[] = Container::map($line,
@@ -148,16 +151,19 @@ class CsvSerializer implements DataUnserializerInterface,
 
 		foreach ($data as $line)
 		{
-			$result = \fputcsv($stream, $line, $this->separator,
+			$result = @\fputcsv($stream, $line, $this->separator,
 				$this->enclosure, $this->escape);
 			if ($result === false)
+			{
+				$error = \error_get_last();
 				throw new DataSerializationException(
-					'Failed to write CSV line');
+					'Failed to write CSV line: ' . $error['message']);
+			}
 		}
 
-		\fseek($stream, 0);
+		@\fseek($stream, 0);
 		$content = \stream_get_contents($stream);
-		\fclose($stream);
+		@\fclose($stream);
 		return $content;
 	}
 
@@ -165,20 +171,26 @@ class CsvSerializer implements DataUnserializerInterface,
 		MediaTypeInterface $mediaType = null)
 	{
 		$data = $this->prepareSerialization($data);
-		$stream = \fopen($filename, 'wb');
+		$stream = @\fopen($filename, 'wb');
 		if (!\is_resource($stream))
+		{
+			$error = \error_get_last();
 			throw new DataSerializationException(
-				'Failed to open output file');
+				'Failed to open output file: ' . $error['message']);
+		}
 		foreach ($data as $line)
 		{
 			$line = Container::createArray($line, 0);
-			$result = \fputcsv($stream, $line, $this->separator,
+			$result = @\fputcsv($stream, $line, $this->separator,
 				$this->enclosure, $this->escape);
 			if ($result === false)
+			{
+				$error = \error_get_last();
 				throw new DataSerializationException(
-					'Failed to write CSV line');
+					'Failed to write CSV line: ' . $error['message']);
+			}
 		}
-		\fclose($stream);
+		@\fclose($stream);
 	}
 
 	public static function defaultStringifier($value)
