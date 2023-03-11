@@ -163,7 +163,7 @@ final class SerializerTest extends \PHPUnit\Framework\TestCase
 		];
 
 		$serializer = new LuaSerializer();
-		$mediaType = MediaType::createFromString('text/x-lua');
+		$mediaType = MediaTypeFactory::createFromString('text/x-lua');
 
 		foreach ($tests as $key => $data)
 		{
@@ -203,12 +203,6 @@ final class SerializerTest extends \PHPUnit\Framework\TestCase
 
 	public function testRegularCsv()
 	{
-		if (Container::keyValue($_ENV, 'TEST_CSV', 'no') != 'yes')
-		{
-			$this->assertTrue(true);
-			return;
-		}
-
 		$input = [
 			[
 				'ID',
@@ -262,15 +256,10 @@ final class SerializerTest extends \PHPUnit\Framework\TestCase
 
 	public function testCsvTransform()
 	{
-		if (Container::keyValue($_ENV, 'TEST_CSV', 'no') != 'yes')
-		{
-			$this->assertTrue(true);
-			return;
-		}
-
 		$tests = [
 			'literal' => [
 				'input' => 123,
+				'serialized' => "123\n",
 				'output' => [
 					[
 						123
@@ -283,6 +272,7 @@ final class SerializerTest extends \PHPUnit\Framework\TestCase
 					'name' => 'Bob',
 					'age' => 42
 				],
+				'serialized' => "id,5\nname,Bob\nage,42\n",
 				'output' => [
 					[
 						'id',
@@ -297,6 +287,16 @@ final class SerializerTest extends \PHPUnit\Framework\TestCase
 						42
 					]
 				]
+			],
+			'object with media type parameters' => [
+				'input' => [
+					'id' => 5,
+					'name' => 'Bob',
+					'age' => 42
+				],
+				'mediaType' => MediaTypeFactory::createFromString(
+					'text/csv;separator=";"', true),
+				'serialized' => "id;5\nname;Bob\nage;42\n"
 			],
 			'collection' => [
 				'input' => [
@@ -351,27 +351,38 @@ final class SerializerTest extends \PHPUnit\Framework\TestCase
 		foreach ($tests as $label => $test)
 		{
 			$input = $test['input'];
-			$output = $test['output'];
+			$mediaType = Container::keyValue($test, 'mediaType', null);
+			$valid = Container::keyValue($test, 'valid', true);
 
-			$valid = $serializer->canSerializeData($input);
+			$this->assertEquals($valid,
+				$serializer->canSerializeData($input, $mediaType),
+				'Can serialize ' . $label);
+
 			if (!$valid)
-			{
-				$this->assertFalse($valid);
 				continue;
+
+			$serialized = $serializer->serializeData($input, $mediaType);
+			if (($expected = Container::keyValue($test, 'serialized')))
+			{
+				$this->assertEquals($expected, $serialized,
+					'Serialized ' . $label);
 			}
 
-			$serialized = $serializer->serializeData($input);
-			$deserialized = $serializer->unserializeData($serialized);
-
-			$this->assertEquals($output, $deserialized,
-				$label . ' serialization/deserialization');
+			if (Container::keyExists($test, 'output'))
+			{
+				$deserialized = $serializer->unserializeData(
+					$serialized, $mediaType);
+				$output = $test['output'];
+				$this->assertEquals($output, $deserialized,
+					$label . ' serialization/deserialization');
+			}
 		}
 	}
 
 	public function testUrlEncoded()
 	{
 		$serializer = new UrlEncodedSerializer();
-		$mediaType = MediaType::createFromString(
+		$mediaType = MediaTypeFactory::createFromString(
 			'application/x-www-form-urlencoded');
 
 		foreach ([

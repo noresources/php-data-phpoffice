@@ -68,7 +68,7 @@ class YamlSerializer implements DataUnserializerInterface,
 		MediaTypeInterface $mediaType = null)
 	{
 		if (\is_string($mediaType))
-			$mediaType = MediaType::createFromString($mediaType);
+			$mediaType = MediaTypeFactory::createFromString($mediaType);
 		if ($mediaType instanceof MediaTypeInterface)
 		{
 			$types = $this->getMediaTypes();
@@ -137,7 +137,7 @@ class YamlSerializer implements DataUnserializerInterface,
 	protected function buildMediaTypeList()
 	{
 		return [
-			MediaType::createFromString('text/x-yaml')
+			MediaTypeFactory::createFromString('text/x-yaml')
 		];
 	}
 }

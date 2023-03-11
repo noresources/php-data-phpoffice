@@ -9,3 +9,4 @@
 
 # Test derived data
 /tests/derived
+\.phpunit.result.cache

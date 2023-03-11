@@ -15,9 +15,13 @@ use NoreSources\MediaType\MediaType;
 use NoreSources\Data\Serialization\Traits\DataFileSerializerTrait;
 use NoreSources\Data\Serialization\Traits\DataFileUnserializerTrait;
 use NoreSources\Data\Serialization\Traits\DataFileExtensionTrait;
+use NoreSources\Container\Container;
 
 /**
  * JSON content and file (de)serialization
+ *
+ * Supported media type parameters
+ * - style=pretty
  *
  * Require json PHP extension.
  *
@@ -32,6 +36,8 @@ class JsonSerializer implements DataUnserializerInterface,
 	use DataFileSerializerTrait;
 	use DataFileUnserializerTrait;
 	use DataFileExtensionTrait;
+
+	const STYLE_PRETTY = 'pretty';
 
 	public function __construct()
 	{
@@ -74,7 +80,22 @@ class JsonSerializer implements DataUnserializerInterface,
 	public function serializeData($data,
 		MediaTypeInterface $mediaType = null)
 	{
-		return \json_encode($data);
+		$flags = 0;
+		if ($mediaType)
+		{
+			if (\is_string($mediaType))
+				$mediaType = MediaTypeFactory::createFromString(
+					$mediaType);
+			if (($mediaType instanceof MediaTypeInterface) &&
+				($style = Container::keyValue(
+					$mediaType->getParameters(), 'style')) &&
+				(\strcasecmp($style, self::STYLE_PRETTY) == 0))
+			{
+				$flags |= JSON_PRETTY_PRINT;
+			}
+		}
+
+		return \json_encode($data, $flags);
 	}
 
 	public function canUnserializeData($data,
@@ -96,7 +117,7 @@ class JsonSerializer implements DataUnserializerInterface,
 	protected function buildMediaTypeList()
 	{
 		return [
-			MediaType::createFromString('application/json')
+			MediaTypeFactory::createFromString('application/json')
 		];
 	}
 }

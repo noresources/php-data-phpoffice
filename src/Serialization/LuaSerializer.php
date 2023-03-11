@@ -27,6 +27,24 @@ class LuaSerializer implements DataSerializerInterface,
 	use MediaTypeListTrait;
 	use DataFileSerializerTrait;
 
+	/**
+	 * Export value "as is"
+	 *
+	 * This is the default behavior of the serializeData() method
+	 *
+	 * @var string
+	 */
+	const MODE_RAW = 'raw';
+
+	/**
+	 * Export value prefixed by a "return" keyword
+	 *
+	 * This is the default behavior of the serializeDataToFile() method
+	 *
+	 * @var string
+	 */
+	const MODE_MODULE = 'module';
+
 	public function getSerializableDataMediaTypes()
 	{
 		return $this->getMediaTypes();
@@ -44,19 +62,63 @@ class LuaSerializer implements DataSerializerInterface,
 	public function serializeData($data,
 		MediaTypeInterface $mediaType = null)
 	{
-		if (Container::isTraversable($data))
+		$prefix = '';
+		if ($mediaType)
 		{
-			return $this->serializeTable($data);
+			if (\is_string($mediaType))
+				$mediaType = MediaTypeFactory::createFromMedia(
+					$mediaType);
+
+			if (($mediaType instanceof MediaTypeInterface) &&
+				($mode = Container::keyValue(
+					$mediaType->getParameters(), 'mode')) &&
+				(\strcasecmp($mode, self::MODE_MODULE) == 0))
+			{
+				$prefix = 'return ';
+			}
 		}
 
-		return $this->serializeLiteral($data);
+		if (Container::isTraversable($data))
+		{
+			return $prefix . $this->serializeTable($data);
+		}
+
+		return $prefix . $this->serializeLiteral($data);
 	}
 
 	public function serializeToFile($filename, $data,
 		MediaTypeInterface $mediaType = null)
 	{
-		$serialized = 'return ' . $this->serializeData($data, $mediaType);
-		\file_put_contents($filename, $serialized);
+		$serialized = '';
+		$prefix = 'return ';
+		if ($mediaType)
+		{
+			if (\is_string($mediaType))
+				$mediaType = MediaTypeFactory::createFromMedia(
+					$mediaType);
+
+			if (($mediaType instanceof MediaTypeInterface) &&
+				($mode = Container::keyValue(
+					$mediaType->getParameters(), 'mode')) &&
+				(\strcasecmp($mode, self::MODE_RAW) == 0))
+			{
+				$prefix = '';
+			}
+		}
+
+		if (Container::isTraversable($data))
+			$serialized = $prefix . $this->serializeTable($data);
+		else
+			$serialized = $prefix . $this->serializeLiteral($data);
+
+		$flags = 0;
+		if (\is_string($filename))
+		{
+			if (!filter_var($filename, FILTER_VALIDATE_URL))
+				$flags = LOCK_EX;
+		}
+
+		\file_put_contents($filename, $serialized, $flags);
 	}
 
 	protected function serializeTableKey($key)
@@ -130,7 +192,7 @@ class LuaSerializer implements DataSerializerInterface,
 	protected function buildMediaTypeList()
 	{
 		return [
-			MediaType::createFromString('text/x-lua')
+			MediaTypeFactory::createFromString('text/x-lua')
 		];
 	}
 

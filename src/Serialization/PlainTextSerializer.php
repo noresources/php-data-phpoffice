@@ -140,7 +140,7 @@ class PlainTextSerializer implements DataUnserializerInterface,
 	protected function buildMediaTypeList()
 	{
 		return [
-			MediaType::createFromString('text/plain')
+			MediaTypeFactory::createFromString('text/plain')
 		];
 	}
 }

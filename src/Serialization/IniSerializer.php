@@ -105,8 +105,8 @@ class IniSerializer implements DataUnserializerInterface,
 	protected function buildMediaTypeList()
 	{
 		return [
-			MediaType::createFromString('text/x-ini'),
-			MediaType::createFromString(
+			MediaTypeFactory::createFromString('text/x-ini'),
+			MediaTypeFactory::createFromString(
 				'application/x-wine-extension-ini')
 		];
 	}
