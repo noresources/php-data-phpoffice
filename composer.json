@@ -1,0 +1,49 @@
+{
+	"name": "noresources/ns-php-data-phpoffice", 
+	"description": "Data (de)serialization PHPOffice adapter", 
+	"type": "library", 
+	"license": "MIT", 
+	"keywords": [
+		"serialization"
+	], 
+	"authors": [
+		{
+			"name": "Renaud Guillard", 
+			"email": "dev@nore.fr", 
+			"role": "lead"
+		}
+	], 
+	"autoload": {
+		"psr-4": {
+			"NoreSources\\Data\\PhpOffice\\": "src/"
+		}
+	}, 
+	"require": {
+		"php": ">=7.0", 
+		"noresources/ns-php-data": "^2.0",
+		"phpoffice/phpexcel": "^1.8" 
+	}, 
+	"scripts": {
+		"test": "@php  ./vendor/bin/phpunit --color=never --bootstrap vendor/autoload.php tests"
+	}, 
+	"require-dev": {
+		"phpunit/phpunit": ">= 5.0"
+	}, 
+	"extra": {
+		"branch-alias": {
+			"dev-1.0.x": "1.0.x-dev", 
+			"dev-main": "2.0.x-dev"
+		}, 
+		"ns-php-data": {
+			"serializers": [
+				"NoreSources\\Data\\PhpOffice\\Serialization\\SpreadsheetSerializer"
+			]
+		}
+	}, 
+	"suggest": {
+		"mpdf/mpdf": "Option for rendering PDF with PDF Writer", 
+		"dompdf/dompdf": "Option for rendering PDF with PDF Writer (doesn't yet support PHP8)", 
+		"tecnickcom/tcpdf": "Option for rendering PDF with PDF Writer (doesn't yet support PHP8)", 
+		"jpgraph/jpgraph": "Option for rendering charts, or including charts with PDF or HTML Writers"
+	}
+}

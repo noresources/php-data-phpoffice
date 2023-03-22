@@ -1,0 +1,11 @@
+# Composer
+/composer.lock
+/vendor
+
+# Eclipse
+\.buildpath
+\.project
+\.settings
+
+# Test derived data
+/tests/derived
