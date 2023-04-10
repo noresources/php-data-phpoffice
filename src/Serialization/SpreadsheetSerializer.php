@@ -10,45 +10,49 @@ namespace NoreSources\Data\PhpOffice\Serialization;
 
 use NoreSources\Container\Container;
 use NoreSources\Data\Serialization\SerializableMediaTypeInterface;
+use NoreSources\Data\Serialization\StreamSerializerInterface;
 use NoreSources\Data\Utility\Traits\MediaTypeListTrait;
 use NoreSources\Data\Utility\Traits\FileExtensionListTrait;
 use NoreSources\MediaType\MediaTypeInterface;
+use NoreSources\Data\Serialization\Traits\StreamSerializerMediaTypeTrait;
 use NoreSources\Data\Utility\MediaTypeListInterface;
 use NoreSources\Data\Utility\FileExtensionListInterface;
 use NoreSources\MediaType\MediaTypeFactory;
-use PhpOffice\PhpSpreadsheet\IOFactory;
 use NoreSources\MediaType\MediaTypeException;
-use PhpOffice\PhpSpreadsheet\Helper\Sample;
 use NoreSources\Data\Serialization\DataSerializationException;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Reader\Xls\RC4;
 use NoreSources\Type\TypeConversion;
 use NoreSources\Data\Analyzer;
 use NoreSources\Data\Tableizer;
 use NoreSources\Data\Serialization\FileSerializerInterface;
+use NoreSources\Data\Serialization\Traits\StreamSerializerFileSerializerTrait;
 use NoreSources\MediaType\MediaTypeMatcher;
 use NoreSources\Data\Serialization\Traits\SerializableMediaTypeTrait;
+use NoreSources\Data\Serialization\Traits\StreamSerializerBaseTrait;
 use NoreSources\Data\Serialization\UnserializableMediaTypeInterface;
 use NoreSources\Data\Serialization\Traits\UnserializableMediaTypeTrait;
 use NoreSources\Data\Serialization\FileUnserializerInterface;
 use NoreSources\Data\Serialization\SerializationException;
+use NoreSources\Data\Serialization\StreamUnserializerInterface;
+use NoreSources\Data\Serialization\Traits\StreamUnserializerBaseTrait;
 use Psr\Container\ContainerExceptionInterface;
 
 class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 	SerializableMediaTypeInterface, FileUnserializerInterface,
-	FileSerializerInterface, FileExtensionListInterface
+	FileSerializerInterface, FileExtensionListInterface,
+	StreamUnserializerInterface, StreamSerializerInterface
 {
 	use UnserializableMediaTypeTrait;
 	use SerializableMediaTypeTrait;
+	use StreamUnserializerBaseTrait;
+	use StreamSerializerBaseTrait;
 
-	const COLUMN_OFFSET = 0;
-
-	const SPREADSHEET_CLASS = \PHPExcel::class;
+	const SPREADSHEET_CLASS = \PhpOffice\PhpSpreadsheet\Spreadsheet::class;
 
 	const TABLE_ROW_HEADER = 0x01;
 
 	const TABLE_COLUMN_HEADER = 0x02;
+
+	const COLUMN_OFFSET = 1;
 
 	///////////////////////////////////////////////////////
 	// UnserializableMediaTYpeInterface
@@ -69,6 +73,65 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 	{
 		return self::getMediaRangesMatching(
 			SpreadsheetIOEntry::WRITABLE);
+	}
+
+	//////////////////////////////////
+	// StreamUnserializerInterface
+	public function unserializeFromStream($stream,
+		MediaTypeInterface $mediaType = null)
+	{
+		$meta = \stream_get_meta_data($stream);
+		$uri = Container::keyValue($meta, 'uri');
+		if (!$uri)
+			throw new SerializationException(
+				'Unsupported stream (no URI)');
+		return $this->unserializeFromFile($filename, $mediaType);
+	}
+
+	//////////////////////////////////
+	// StreamSerializerInterface
+
+	/**
+	 *
+	 * @see \NoreSources\Data\Serialization\StreamSerializerInterface::serializeToStream()
+	 */
+	public function serializeToStream($stream, $data,
+		MediaTypeInterface $mediaType = null)
+	{
+		$writerType = $this->defaultWriterType;
+		if ($mediaType)
+		{
+			$entry = $this->getIOEntryForMediaType(
+				SpreadsheetIOEntry::WRITABLE, $mediaType);
+			if (!$entry)
+				throw new SerializationException(
+					'No writer available for ' . \strval($mediaType));
+			$writerType = $entry->type;
+		}
+		else // Last chance
+		{
+			$mediaTypeFactory = MediaTypeFactory::getInstance();
+			try
+			{
+				$mediaType = $mediaTypeFactory->createFromMedia($stream);
+			}
+			catch (MediaTypeException $e)
+			{}
+			if ($mediaType)
+			{
+				$e = $this->getIOEntryForMediaType(
+					SpreadsheetIOEntry::WRITABLE, $mediaType);
+				if ($e)
+					$writerType = $e->type;
+			}
+		}
+
+		$spreadsheet = $this->createSpreadsheet($data);
+		$writer = SpreadsheetIOFactory::createWriter($spreadsheet,
+			$writerType);
+		$writer->save($stream);
+		$spreadsheet->disconnectWorksheets();
+		$spreadsheet = null;
 	}
 
 	//////////////////////////////////////////////////////
@@ -196,40 +259,31 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 	public function serializeToFile($filename, $data,
 		MediaTypeInterface $mediaType = null)
 	{
-		$writerType = $this->defaultWriterType;
-		if ($mediaType)
+		if (!$mediaType &&
+			($entry = self::getIOEntryForExtension(
+				SpreadsheetIOEntry::WRITABLE,
+				\pathinfo($filename, PATHINFO_EXTENSION))))
 		{
-			$entry = $this->getIOEntryForMediaType(
-				SpreadsheetIOEntry::WRITABLE, $mediaType);
-			if (!$entry)
-				throw new SerializationException(
-					'No writer available for ' . \strval($mediaType));
-			$writerType = $entry->type;
+			$mediaType = $entry->mediaType;
 		}
-		else // Last chance
+
+		$stream = @\fopen($filename, 'w');
+		if ($stream === false)
 		{
-			$mediaTypeFactory = MediaTypeFactory::getInstance();
-			try
-			{
-				$mediaType = $mediaTypeFactory->createFromMedia(
-					$filename);
-			}
-			catch (MediaTypeException $e)
-			{}
-			if ($mediaType)
-			{
-				$e = $this->getIOEntryForMediaType(
-					SpreadsheetIOEntry::WRITABLE, $mediaType);
-				if ($e)
-					$writerType = $e->type;
-			}
+			$error = \error_get_last();
+			throw new SerializationException($error['message']);
 		}
-		$spreadsheet = $this->createSpreadsheet($data);
-		$spreadsheet->setHasMacros(false);
-		$writer = SpreadsheetIOFactory::createWriter($spreadsheet,
-			$writerType);
-		$writer->save($filename);
-		$spreadsheet->disconnectWorksheets();
+
+		try
+		{
+			$this->serializeToStream($stream, $data, $mediaType);
+		}
+		catch (\Exception $e)
+		{
+			@\fclose($stream);
+			throw $e;
+		}
+		@\fclose($stream);
 	}
 
 	////////////////////////////////////////////////////////////
@@ -331,32 +385,29 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 		$rw = $r | $w;
 		$pdfMediaType = $mediaTypeFactory->createFromString(
 			'application/pdf');
-		$odsMediaType = $mediaTypeFactory->createFromString(
-			"application/vnd.oasis.opendocument.spreadsheet");
 
 		self::$ioEntries = [
-			new SpreadsheetIOEntry('Excel2007', $rw,
+			new SpreadsheetIOEntry('Xlsx', $rw,
 				$mediaTypeFactory->createFromString(
-					"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-				'xlsx'),
-			new SpreadsheetIOEntry('Excel5', $rw,
+					"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")),
+			new SpreadsheetIOEntry('Xls', $rw,
 				$mediaTypeFactory->createFromString(
-					"application/vnd.ms-excel"), 'xls'),
-			new SpreadsheetIOEntry('CSV', $rw,
-				$mediaTypeFactory->createFromString('text/csv'), 'csv'),
-			new SpreadsheetIOEntry('HTML', $rw,
+					"application/vnd.ms-excel")),
+			new SpreadsheetIOEntry('Ods', $rw,
+				$mediaTypeFactory->createFromString(
+					"application/vnd.oasis.opendocument.spreadsheet")),
+			new SpreadsheetIOEntry('Csv', $rw,
+				$mediaTypeFactory->createFromString('text/csv')),
+			new SpreadsheetIOEntry('Html', $rw,
 				$mediaTypeFactory->createFromString('text/html')),
 			// Readers
-			new SpreadsheetIOEntry('OOCalc', $r, $odsMediaType, 'ods'),
 			new SpreadsheetIOEntry('Xml', $r,
 				$mediaTypeFactory->createFromString('application/xml')),
-			new SpreadsheetIOEntry('SYLK', $r),
+			new SpreadsheetIOEntry('Slk', $r),
 			new SpreadsheetIOEntry('Gnumeric', $r,
 				$mediaTypeFactory->createFromString(
 					"application/x-gnumeric")),
 			// Writers
-			new SpreadsheetIOEntry('OpenDocument', $w, $odsMediaType,
-				'ods'),
 			new SpreadsheetIOEntry('Tcpdf', $w, $pdfMediaType, 'pdf'),
 			new SpreadsheetIOEntry('Dompdf', $w, $pdfMediaType, 'pdf'),
 			new SpreadsheetIOEntry('Mpdf', $w, $pdfMediaType, 'pdf')
@@ -382,7 +433,6 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 	protected function createTable($spreadsheet, $tableFlags)
 	{
 		$sheetCount = $spreadsheet->getSheetCount();
-		$sheetCount = max(1, $sheetCount - 1);
 		if ($sheetCount == 0)
 			return [
 				[]
@@ -411,8 +461,6 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 			$hasTitle = \is_string($title) && \strval($title) &&
 				!\is_numeric($title);
 			$table = $this->createTableFromWorksheet($sheet, $tableFlags);
-			if (Container::count($table) == 0)
-				continue;
 			if ($hasTitle)
 				$data[$title] = $table;
 			else
@@ -424,8 +472,6 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 
 	protected function createTableFromWorksheet($sheet, $tableFlags)
 	{
-		//$collection = $sheet->getCellCollection();
-		//$max = $collection->getHighestRowAndColumn();
 		$max = SpreadsheetUtility::getHighestRowAndColumn($sheet);
 		$max['column'] = SpreadsheetUtility::columnIndexFromString(
 			$max['column']);
@@ -435,7 +481,6 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 			$tableFlags = 0;
 			$pivot = $sheet->getCellByColumnAndRow(self::COLUMN_OFFSET,
 				1)->getValue();
-
 			if ($pivot === null)
 			{
 				$tableFlags = self::TABLE_ROW_HEADER |
@@ -452,7 +497,8 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 			$firstRow++;
 			for ($r = $firstRow; $r <= $max['row']; $r++)
 			{
-				$cell = $sheet->getCellByColumnAndRow(0, $r);
+				$cell = $sheet->getCellByColumnAndRow(
+					self::COLUMN_OFFSET, $r);
 				$rowKeys[$r] = $this->stringify($cell->getValue());
 			}
 		}
@@ -572,9 +618,9 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 	 */
 	private static $ioEntries;
 
-	private $defaultWriterType = 'OpenDocument';
+	private $defaultWriterType = 'Ods';
 
-	private $defaultReaderType = 'OOCalc';
+	private $defaultReaderType = 'Ods';
 
 	/**
 	 *

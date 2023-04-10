@@ -70,5 +70,5 @@ class SpreadsheetIOFactory
 			], $readerType, $readerClass);
 	}
 
-	const FACTORY_CLASS = \PHPExcel_IOFactory::class;
+	const FACTORY_CLASS = \PhpOffice\PhpSpreadsheet\IOFactory::class;
 }

@@ -20,8 +20,8 @@
 	}, 
 	"require": {
 		"php": ">=7.0", 
-		"noresources/ns-php-data": "^2.0",
-		"phpoffice/phpexcel": "^1.8" 
+		"noresources/ns-php-data": "^2.0", 
+		"phpoffice/phpspreadsheet": "^1.19"
 	}, 
 	"scripts": {
 		"test": "@php  ./vendor/bin/phpunit --color=never --bootstrap vendor/autoload.php tests"

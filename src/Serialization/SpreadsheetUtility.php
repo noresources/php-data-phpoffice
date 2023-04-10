@@ -8,16 +8,21 @@
  */
 namespace NoreSources\Data\PhpOffice\Serialization;
 
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+
 class SpreadsheetUtility
 {
 
 	public static function columnIndexFromString($s)
 	{
-		return \PHPExcel_Cell::columnIndexFromString($s);
+		return Coordinate::columnIndexFromString($s);
 	}
 
 	public static function getHighestRowAndColumn($sheet)
 	{
-		return $sheet->getHighestRowAndColumn();
+		$collection = $sheet->getCellCollection();
+		return $collection->getHighestRowAndColumn();
 	}
 }
+
+

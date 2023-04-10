@@ -23,6 +23,8 @@ use NoreSources\Data\Utility\FileExtensionListInterface;
 use NoreSources\MediaType\MediaTypeMatcher;
 use NoreSources\Data\Utility\MediaTypeListInterface;
 use NoreSources\Data\PhpOffice\Serialization\SpreadsheetIOEntry;
+use Composer\InstalledVersions;
+use NoreSources\SemanticVersion;
 
 class SpreadsheetSerializerTestClass implements
 	ContainerPropertyInterface
@@ -61,8 +63,12 @@ class SpreadsheetSerializerTest extends \PHPUnit\Framework\TestCase
 
 	public function testSerialization()
 	{
+		$version = InstalledVersions::getPrettyVersion(
+			'phpoffice/phpspreadsheet');
+		$version = new SemanticVersion($version);
+		$version = $version->major . '_' . $version->minor;
 		$serializer = new SpreadsheetSerializer();
-		$pairs = [
+		$tests = [
 			'CSV' => [
 				'extension' => 'csv',
 				'mediaType' => 'text/csv'
@@ -73,28 +79,30 @@ class SpreadsheetSerializerTest extends \PHPUnit\Framework\TestCase
 			]*/
 			'html' => [
 				'mediaType' => 'text/html',
-				'extension' => 'html'
+				'extension' => 'html',
+				'suffix' => $version
 			]
 		];
-		foreach ($pairs as $description => $pair)
+		foreach ($tests as $description => $test)
 		{
-			$extension = $pair['extension'];
+			$extension = $test['extension'];
 			$mediaType = MediaTypeFactory::getInstance()->createFromString(
-				$pair['mediaType']);
+				$test['mediaType']);
 
 			$text = $description . ' with extension only';
-			$this->runSerializerForExtension(__METHOD__, $text,
+			$suffix = Container::keyValue($test, 'suffix');
+			$this->runSerializerForExtension(__METHOD__, $suffix, $text,
 				$extension);
 			$text = $description . ' with media type only';
-			$this->runSerializerForExtension(__METHOD__, $text, null,
-				$mediaType);
+			$this->runSerializerForExtension(__METHOD__, $suffix, $text,
+				null, $mediaType);
 			$text = $description . ' using both extension and media type';
-			$this->runSerializerForExtension(__METHOD__, $text,
+			$this->runSerializerForExtension(__METHOD__, $suffix, $text,
 				$extension, $mediaType);
 		}
 	}
 
-	public function runSerializerForExtension($method, $text,
+	public function runSerializerForExtension($method, $suffix, $text,
 		$extension = null, MediaTypeInterface $mediaType = null)
 	{
 		$serializer = new SpreadsheetSerializer();
@@ -126,7 +134,8 @@ class SpreadsheetSerializerTest extends \PHPUnit\Framework\TestCase
 
 		foreach ($tests as $label => $data)
 		{
-			$suffix = \str_replace(' ', '_', $label);
+			$suffix = \str_replace(' ', '_', $label) .
+				($suffix ? '_' . $suffix : '');
 			$label = $label . ' ' . $text;
 
 			if ($extension)
