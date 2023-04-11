@@ -136,6 +136,7 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 		$tableFlags = self::TABLE_ROW_HEADER | self::TABLE_COLUMN_HEADER;
 		$reader->setLoadSheetsOnly(true);
 		$spreadsheet = $reader->load($filename);
+		$spreadsheet->setHasMacros(false);
 		$data = $this->createTable($spreadsheet, $tableFlags);
 		$spreadsheet->disconnectWorksheets();
 		$spreadsheet = null;
@@ -224,6 +225,7 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 			}
 		}
 		$spreadsheet = $this->createSpreadsheet($data);
+		$spreadsheet->setHasMacros(false);
 		$writer = SpreadsheetIOFactory::createWriter($spreadsheet,
 			$writerType);
 		$writer->save($filename);
