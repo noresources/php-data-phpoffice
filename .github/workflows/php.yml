@@ -10,7 +10,7 @@ on:
     - master
 jobs:
   build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
     - name: Validate composer.json and composer.lock
@@ -27,5 +27,8 @@ jobs:
     - name: Install dependencies
       if: steps.composer-cache.outputs.cache-hit != 'true'
       run: composer install --prefer-dist --no-progress --no-suggest
+    - name: Update composer packages
+      run: composer update
+
     - name: Run test suite
       run: composer run-script test
