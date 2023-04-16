@@ -35,6 +35,7 @@ use NoreSources\Data\Serialization\SerializationException;
 use NoreSources\Data\Serialization\StreamUnserializerInterface;
 use NoreSources\Data\Serialization\Traits\StreamUnserializerBaseTrait;
 use Psr\Container\ContainerExceptionInterface;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 	SerializableMediaTypeInterface, FileUnserializerInterface,
@@ -472,8 +473,9 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 
 	protected function createTableFromWorksheet($sheet, $tableFlags)
 	{
-		$max = SpreadsheetUtility::getHighestRowAndColumn($sheet);
-		$max['column'] = SpreadsheetUtility::columnIndexFromString(
+		$collection = $sheet->getCellCollection();
+		$max = $collection->getHighestRowAndColumn($sheet);
+		$max['column'] = Coordinate::columnIndexFromString(
 			$max['column']);
 
 		if ($tableFlags === null)
