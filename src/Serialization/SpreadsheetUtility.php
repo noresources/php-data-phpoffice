@@ -11,11 +11,6 @@ namespace NoreSources\Data\PhpOffice\Serialization;
 class SpreadsheetUtility
 {
 
-	public static function columnIndexFromString($s)
-	{
-		return \PHPExcel_Cell::columnIndexFromString($s);
-	}
-
 	public static function getHighestRowAndColumn($sheet)
 	{
 		return $sheet->getHighestRowAndColumn();

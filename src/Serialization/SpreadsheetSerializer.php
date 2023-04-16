@@ -424,10 +424,8 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 
 	protected function createTableFromWorksheet($sheet, $tableFlags)
 	{
-		//$collection = $sheet->getCellCollection();
-		//$max = $collection->getHighestRowAndColumn();
-		$max = SpreadsheetUtility::getHighestRowAndColumn($sheet);
-		$max['column'] = SpreadsheetUtility::columnIndexFromString(
+		$max = $sheet->getHighestRowAndColumn();
+		$max['column'] = \PHPExcel_Cell::columnIndexFromString(
 			$max['column']);
 
 		if ($tableFlags === null)
