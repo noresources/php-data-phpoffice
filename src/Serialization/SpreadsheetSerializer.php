@@ -37,6 +37,22 @@ use NoreSources\Data\Serialization\Traits\StreamUnserializerBaseTrait;
 use Psr\Container\ContainerExceptionInterface;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
+/**
+ * Spreadsheet file (de)serializer
+ *
+ * Supported parameters
+ * <ul>
+ * <li>heading: Indicates if sheet(s) have row and/or column heading
+ * <ul>
+ * <li>auto: Auto-detect headings</li>
+ * <li>none or <empty string>: No neading</li>
+ * <li>row or rows: Row heading only</li>
+ * <li>column or columns: Column heading only</li>
+ * <li>both: Row and column heading</li>
+ * < /ul>
+ * </li>
+ * </ul>
+ */
 class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 	SerializableMediaTypeInterface, FileUnserializerInterface,
 	FileSerializerInterface, FileExtensionListInterface,
@@ -46,6 +62,48 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 	use SerializableMediaTypeTrait;
 	use StreamUnserializerBaseTrait;
 	use StreamSerializerBaseTrait;
+
+	/**
+	 * Row and column heading mode
+	 *
+	 * @var string
+	 */
+	const PARAMETER_HEADING = 'heading';
+
+	/**
+	 * Auto-detect row and column headings
+	 *
+	 * @var string
+	 */
+	const PARAMETER_HEADING_AUTO = 'auto';
+
+	/**
+	 * No headings
+	 *
+	 * @var string
+	 */
+	const PARAMETER_HEADING_NONE = 'none';
+
+	/**
+	 * Row heading only
+	 *
+	 * @var string
+	 */
+	const PARAMETER_HEADING_ROW = 'row';
+
+	/**
+	 * Column heading only
+	 *
+	 * @var string
+	 */
+	const PARAMETER_HEADING_COLUMN = 'column';
+
+	/**
+	 * Both row and column headings
+	 *
+	 * @var string
+	 */
+	const PARAMETER_HEADING_BOTH = 'both';
 
 	const SPREADSHEET_CLASS = \PhpOffice\PhpSpreadsheet\Spreadsheet::class;
 
@@ -197,7 +255,10 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 			$reader = SpreadsheetIOFactory::createReaderForFile(
 				$filename);
 
-		$tableFlags = self::TABLE_ROW_HEADER | self::TABLE_COLUMN_HEADER;
+		$heading = Container::keyValue($mediaType->getParameters(),
+			'heading', self::PARAMETER_HEADING_AUTO);
+		$tableFlags = self::headingModeToFlags($heading);
+
 		$reader->setLoadSheetsOnly(true);
 		$spreadsheet = $reader->load($filename);
 		$spreadsheet->setHasMacros(false);
@@ -612,6 +673,45 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 			}
 			$r++;
 		}
+	}
+
+	/**
+	 *
+	 * @param mixed $heading
+	 *        	Heading mode
+	 * @throws \InvalidArgumentException
+	 * @return integer Heading flags
+	 */
+	protected function headingModeToFlags($heading)
+	{
+		$mode = $heading;
+		if (\is_integer($heading))
+			return $heading;
+		if (\is_null($heading))
+			return null;
+		if ($heading === true)
+			return self::TABLE_COLUMN_HEADER | self::TABLE_ROW_HEADER;
+		if ($heading === false)
+			return 0;
+		$mode = \strtolower($mode);
+		switch ($mode)
+		{
+			case self::PARAMETER_HEADING_AUTO:
+			case '':
+				return null;
+			case self::PARAMETER_HEADING_NONE:
+				return 0;
+			case self::PARAMETER_HEADING_ROW:
+			case 'rows':
+				return self::TABLE_ROW_HEADER;
+			case self::PARAMETER_HEADING_COLUMN:
+			case 'columns':
+				return self::TABLE_COLUMN_HEADER;
+			case self::PARAMETER_HEADING_BOTH:
+				return self::TABLE_ROW_HEADER | self::TABLE_COLUMN_HEADER;
+		}
+		throw new \InvalidArgumentException(
+			'Unexpected headeing mode "' . $mode . '"');
 	}
 
 	/**
