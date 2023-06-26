@@ -51,6 +51,7 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
  * <li>both: Row and column heading</li>
  * < /ul>
  * </li>
+ * <li>flatten: Flatten table if domension contains only one element.</li>
  * </ul>
  */
 class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
@@ -62,6 +63,13 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 	use SerializableMediaTypeTrait;
 	use StreamUnserializerBaseTrait;
 	use StreamSerializerBaseTrait;
+
+	/**
+	 * Flatten table if dimension contains a single element
+	 *
+	 * @var string
+	 */
+	const PARAMETER_FLATTEN = 'flatten';
 
 	/**
 	 * Row and column heading mode
@@ -265,6 +273,13 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 		$data = $this->createTable($spreadsheet, $tableFlags);
 		$spreadsheet->disconnectWorksheets();
 		$spreadsheet = null;
+
+		if ($mediaType->getParameters()->has(self::PARAMETER_FLATTEN))
+		{
+			if (Container::count($data) == 1)
+				$data = Container::firstValue($data);
+		}
+
 		return $data;
 	}
 
