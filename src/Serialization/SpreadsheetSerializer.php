@@ -571,8 +571,12 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 		$firstRow = 1;
 		$firstColumn = self::COLUMN_OFFSET;
 		if ($tableFlags & self::TABLE_ROW_HEADER)
-		{
+			$firstColumn++;
+		if ($tableFlags & self::TABLE_COLUMN_HEADER)
 			$firstRow++;
+
+		if ($tableFlags & self::TABLE_ROW_HEADER)
+		{
 			for ($r = $firstRow; $r <= $max['row']; $r++)
 			{
 				$cell = $sheet->getCellByColumnAndRow(
@@ -588,7 +592,6 @@ class SpreadsheetSerializer implements UnserializableMediaTypeInterface,
 
 		if ($tableFlags & self::TABLE_COLUMN_HEADER)
 		{
-			$firstColumn++;
 			for ($c = $firstColumn; $c <= $max['column']; $c++)
 			{
 				$cell = $sheet->getCellByColumnAndRow($c, 1);
