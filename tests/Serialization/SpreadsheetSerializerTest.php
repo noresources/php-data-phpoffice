@@ -80,7 +80,11 @@ class SpreadsheetSerializerTest extends \PHPUnit\Framework\TestCase
 			'html' => [
 				'mediaType' => 'text/html',
 				'extension' => 'html',
-				'suffix' => $version
+				'suffix' => $version,
+				'postprocess' => [
+					self::class,
+					'removeHtmlMeta'
+				]
 			]
 		];
 		foreach ($tests as $description => $test)
@@ -91,19 +95,21 @@ class SpreadsheetSerializerTest extends \PHPUnit\Framework\TestCase
 
 			$text = $description . ' with extension only';
 			$suffix = Container::keyValue($test, 'suffix');
+			$postprocess = Container::keyValue($test, 'postprocess');
 			$this->runSerializerForExtension(__METHOD__, $suffix, $text,
-				$extension);
+				$extension, null, $postprocess);
 			$text = $description . ' with media type only';
 			$this->runSerializerForExtension(__METHOD__, $suffix, $text,
-				null, $mediaType);
+				null, $mediaType, $postprocess);
 			$text = $description . ' using both extension and media type';
 			$this->runSerializerForExtension(__METHOD__, $suffix, $text,
-				$extension, $mediaType);
+				$extension, $mediaType, $postprocess);
 		}
 	}
 
 	public function runSerializerForExtension($method, $suffix, $text,
-		$extension = null, MediaTypeInterface $mediaType = null)
+		$extension = null, MediaTypeInterface $mediaType = null,
+		$postprocess = null)
 	{
 		$serializer = new SpreadsheetSerializer();
 
@@ -158,6 +164,9 @@ class SpreadsheetSerializerTest extends \PHPUnit\Framework\TestCase
 				$serializer->serializeToFile($filename, $data,
 					$mediaType);
 
+				if (\is_callable($postprocess))
+					\call_user_func($postprocess, $filename);
+
 				$this->assertDerivedFileEqualsReferenceFile($method,
 					$suffix, $extension,
 					$label . ' result of serialization to file');
@@ -180,7 +189,8 @@ class SpreadsheetSerializerTest extends \PHPUnit\Framework\TestCase
 						\strval($mediaType));
 				}
 
-				if ($serializer instanceof StreamSerializerInterface)
+				if (($serializer instanceof StreamSerializerInterface) &&
+					!\is_callable($postprocess))
 				{
 					$stream = \fopen('php://memory', 'rw');
 					$this->assertNotFalse($stream,
@@ -248,5 +258,12 @@ class SpreadsheetSerializerTest extends \PHPUnit\Framework\TestCase
 		$serializer->serializeToFile($filename, $data);
 		$unserialized = $serializer->unserializeFromFile($filename);
 		$this->assertEquals($data, $unserialized, 'Unserialized back');
+	}
+
+	public static function removeHtmlMeta($filename)
+	{
+		$html = \file_get_contents($filename);
+		$html = \preg_replace('/<meta(.*?)>/i', '', $html);
+		\file_put_contents($filename, $html);
 	}
 }
