@@ -1,5 +1,5 @@
 {
-	"name": "noresources/ns-php-data-phpoffice", 
+	"name": "noresources/data-phpoffice", 
 	"description": "Data (de)serialization PHPOffice adapter", 
 	"type": "library", 
 	"license": "MIT", 
@@ -20,7 +20,7 @@
 	}, 
 	"require": {
 		"php": ">=7.0", 
-		"noresources/ns-php-data": "^2.0", 
+		"noresources/data": "^3.0", 
 		"phpoffice/phpspreadsheet": "^1.19"
 	}, 
 	"scripts": {
@@ -32,7 +32,8 @@
 	"extra": {
 		"branch-alias": {
 			"dev-1.0.x": "1.0.x-dev", 
-			"dev-main": "2.0.x-dev"
+			"dev-2.0.x": "2.0.x-dev", 
+			"dev-main": "3.0.x-dev"
 		}, 
 		"ns-php-data": {
 			"serializers": [
@@ -46,5 +47,10 @@
 		"tecnickcom/tcpdf": "Option for rendering PDF with PDF Writer (doesn't yet support PHP8)", 
 		"jpgraph/jpgraph": "Option for rendering charts, or including charts with PDF or HTML Writers", 
 		"ext-zip": "For zipped file support formats such as ODS and Xlsx"
-	}
+	}, 
+	"replace": {
+		"noresources/ns-php-data-phpoffice": "3.0", 
+		"noresources/ns-php-dataphpoffice": "3.0"
+	}, 
+	"minimum-stability": "dev"
 }
